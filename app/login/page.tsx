@@ -10,7 +10,7 @@
  * option is shown.
  */
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
@@ -29,7 +29,16 @@ import { Separator } from "@/components/ui/separator";
 import { Car, Loader2, Mail } from "lucide-react";
 import { ScaleIn } from "@/components/motion";
 
-export default function LoginPage() {
+/**
+ * Inner component that actually reads `useSearchParams()`.
+ *
+ * Next.js requires any component that calls `useSearchParams()` to be
+ * rendered inside a <Suspense> boundary so that static pre-rendering can
+ * bail out to client-side rendering for the search-param-dependent subtree.
+ * Without this, `next build` fails with a "missing-suspense-with-csr-bailout"
+ * error on pages that would otherwise be statically generated.
+ */
+function LoginPageInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user } = useAuth();
@@ -255,5 +264,26 @@ export default function LoginPage() {
       </Card>
       </ScaleIn>
     </main>
+  );
+}
+
+/**
+ * Default export wraps the inner component in a Suspense boundary so that
+ * `useSearchParams()` works during static generation / production build.
+ *
+ * The fallback is intentionally minimal because the inner component renders
+ * its own skeleton/loading UI almost immediately on the client.
+ */
+export default function LoginPage() {
+  return (
+    <Suspense
+      fallback={
+        <main className="flex min-h-[calc(100vh-4rem)] items-center justify-center bg-gray-50 px-4 py-12">
+          <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
+        </main>
+      }
+    >
+      <LoginPageInner />
+    </Suspense>
   );
 }

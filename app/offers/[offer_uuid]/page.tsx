@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { Suspense, useState, useEffect } from "react";
 import { useParams, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -166,7 +166,14 @@ function InfoRow({ label, value }: { label: string; value: string }) {
  * - Sender sees "Your Offer" with blue accents and Edit/Withdraw actions.
  * - Receiver sees "Offer from [Dealer]" with green accents and Accept/Decline actions.
  */
-export default function OfferDetailPage() {
+/**
+ * Inner component that calls `useSearchParams()` to read `from` / `requestUuid`
+ * for context-aware back navigation. Must live behind a <Suspense> boundary
+ * (see default export below) so Next.js can statically pre-render / bail out
+ * to client rendering without throwing the "missing-suspense-with-csr-bailout"
+ * build error.
+ */
+function OfferDetailPageInner() {
   const { isReady } = useRequireAuth();
   const params = useParams();
   const searchParams = useSearchParams();
@@ -660,5 +667,23 @@ export default function OfferDetailPage() {
       </div>
       </FadeIn>
     </main>
+  );
+}
+
+/**
+ * Default export wraps the inner component in a <Suspense> boundary so that
+ * `useSearchParams()` is allowed during static generation.
+ */
+export default function OfferDetailPage() {
+  return (
+    <Suspense
+      fallback={
+        <main className="flex min-h-[calc(100vh-4rem)] items-center justify-center">
+          <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
+        </main>
+      }
+    >
+      <OfferDetailPageInner />
+    </Suspense>
   );
 }
