@@ -392,7 +392,7 @@ export default function RequestOffersTab({
     return (
       <div className="text-center py-20 space-y-4">
         <p className="text-sm text-red-600 font-medium">{error}</p>
-        <Button variant="outline" size="sm" onClick={fetchOffers}>
+        <Button variant="outline" size="sm" onClick={() => fetchOffers()}>
           <RefreshCw className="size-4 mr-1.5" />
           Retry
         </Button>
