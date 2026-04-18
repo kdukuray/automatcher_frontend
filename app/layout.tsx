@@ -20,6 +20,7 @@ export const metadata: Metadata = {
   title: "AutoMatcher — Find Your Perfect Car",
   description:
     "AutoMatcher connects people looking for specific cars with dealers who have exactly what they need. Submit a request and get matched instantly.",
+  manifest: "/site.webmanifest",
 };
 
 export default function RootLayout({
