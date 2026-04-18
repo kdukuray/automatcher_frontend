@@ -931,8 +931,11 @@ export default function BuyerDashboard() {
   return (
     <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
       {/* ── Tab Bar ─────────────────────────── */}
-      <div className="border-b border-gray-200 mb-8">
-        <nav className="-mb-px flex gap-6" aria-label="Buyer dashboard tabs">
+      {/* Horizontal scroll container keeps all tabs on one line on
+          narrow screens and removes the native scrollbar for a clean
+          underlined tab bar that doubles as a section divider. */}
+      <div className="border-b border-gray-200 mb-8 overflow-x-auto scrollbar-hide">
+        <nav className="-mb-px flex gap-4 sm:gap-6 min-w-max" aria-label="Buyer dashboard tabs">
           {TABS.map((tab) => {
             const isActive = activeTab === tab.id;
 
@@ -950,7 +953,7 @@ export default function BuyerDashboard() {
                 type="button"
                 onClick={() => setActiveTab(tab.id)}
                 className={cn(
-                  "group inline-flex items-center gap-2 border-b-2 px-1 py-3 text-sm font-medium transition-colors cursor-pointer",
+                  "group inline-flex items-center gap-2 border-b-2 px-1 py-3 text-sm font-medium transition-colors cursor-pointer whitespace-nowrap",
                   isActive
                     ? "border-blue-600 text-blue-600"
                     : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700"

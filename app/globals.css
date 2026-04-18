@@ -148,3 +148,15 @@
 .animate-shake {
   animation: shake 0.5s ease-in-out;
 }
+
+/* ── Horizontal-scroll tab bars ──────────────────────────
+   Used on mobile for tab rows with more items than can fit
+   on-screen. Hides the native scrollbar so the row looks
+   like a clean divider while still being swipeable. */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}

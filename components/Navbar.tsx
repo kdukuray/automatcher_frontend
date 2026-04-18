@@ -37,8 +37,51 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useState, useEffect } from "react";
+import { AnimatePresence, motion, type Variants } from "framer-motion";
 import { useAuth } from "@/lib/auth-context";
 import { getUserProfile } from "@/lib/api";
+
+// Shared easing curve — matches the rest of the app's motion language
+// (see components/motion.tsx) so the navbar feels consistent.
+const EASE_OUT: [number, number, number, number] = [0.25, 0.46, 0.45, 0.94];
+
+// --- Mobile menu animation variants ---
+// The container fades + slides down, and its children stagger in
+// sequentially for a polished reveal instead of everything popping at once.
+const mobileMenuVariants: Variants = {
+  hidden: {
+    opacity: 0,
+    height: 0,
+    transition: {
+      // On exit, collapse height first while fading — feels snappier.
+      height: { duration: 0.25, ease: EASE_OUT },
+      opacity: { duration: 0.15, ease: EASE_OUT },
+      when: "afterChildren",
+      staggerChildren: 0.03,
+      staggerDirection: -1,
+    },
+  },
+  visible: {
+    opacity: 1,
+    height: "auto",
+    transition: {
+      height: { duration: 0.3, ease: EASE_OUT },
+      opacity: { duration: 0.2, ease: EASE_OUT },
+      when: "beforeChildren",
+      staggerChildren: 0.05,
+      delayChildren: 0.05,
+    },
+  },
+};
+
+const mobileLinkVariants: Variants = {
+  hidden: { opacity: 0, x: -12 },
+  visible: {
+    opacity: 1,
+    x: 0,
+    transition: { duration: 0.25, ease: EASE_OUT },
+  },
+};
 
 export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -247,69 +290,115 @@ export default function Navbar() {
             </DropdownMenu>
           )}
 
-          {/* Mobile hamburger toggle — navigation links only */}
+          {/* Mobile hamburger toggle — animates between menu/X icons */}
           <Button
             variant="ghost"
             size="icon"
-            className="md:hidden text-gray-600"
+            className="md:hidden text-gray-600 relative overflow-hidden"
             onClick={() => setMobileOpen(!mobileOpen)}
             aria-label="Toggle menu"
+            aria-expanded={mobileOpen}
           >
-            {mobileOpen ? <X className="size-5" /> : <Menu className="size-5" />}
+            {/* AnimatePresence swaps the icon with a rotate + fade for a tactile feel */}
+            <AnimatePresence initial={false} mode="wait">
+              {mobileOpen ? (
+                <motion.span
+                  key="close-icon"
+                  initial={{ rotate: -90, opacity: 0, scale: 0.8 }}
+                  animate={{ rotate: 0, opacity: 1, scale: 1 }}
+                  exit={{ rotate: 90, opacity: 0, scale: 0.8 }}
+                  transition={{ duration: 0.2, ease: EASE_OUT }}
+                  className="flex items-center justify-center"
+                >
+                  <X className="size-5" />
+                </motion.span>
+              ) : (
+                <motion.span
+                  key="menu-icon"
+                  initial={{ rotate: 90, opacity: 0, scale: 0.8 }}
+                  animate={{ rotate: 0, opacity: 1, scale: 1 }}
+                  exit={{ rotate: -90, opacity: 0, scale: 0.8 }}
+                  transition={{ duration: 0.2, ease: EASE_OUT }}
+                  className="flex items-center justify-center"
+                >
+                  <Menu className="size-5" />
+                </motion.span>
+              )}
+            </AnimatePresence>
           </Button>
         </div>
       </div>
 
-      {/* --- Mobile slide-down menu (navigation links only) --- */}
-      {mobileOpen && (
-        <div className="border-t border-blue-100 bg-white md:hidden">
-          <div className="flex flex-col gap-0.5 px-4 py-3">
-            {/* Authenticated-only navigation links — primary actions first */}
-            {!isLoading && user && (
-              <>
+      {/* --- Mobile slide-down menu (navigation links only) ---
+          AnimatePresence handles a graceful exit when the user closes the menu.
+          overflow-hidden on the container lets the height animation look clean. */}
+      <AnimatePresence initial={false}>
+        {mobileOpen && (
+          <motion.div
+            key="mobile-menu"
+            variants={mobileMenuVariants}
+            initial="hidden"
+            animate="visible"
+            exit="hidden"
+            className="border-t border-blue-100 bg-white md:hidden overflow-hidden"
+          >
+            <div className="flex flex-col gap-0.5 px-4 py-3">
+              {/* Authenticated-only navigation links — primary actions first */}
+              {!isLoading && user && (
+                <>
+                  <motion.div variants={mobileLinkVariants} whileTap={{ scale: 0.97 }}>
+                    <Link
+                      href="/dashboard"
+                      className="flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-medium text-gray-600 hover:bg-blue-50 hover:text-blue-600 active:bg-blue-100 transition-colors"
+                      onClick={() => setMobileOpen(false)}
+                    >
+                      <LayoutDashboard className="size-4" />
+                      Dashboard
+                    </Link>
+                  </motion.div>
+
+                  <motion.div variants={mobileLinkVariants} whileTap={{ scale: 0.97 }}>
+                    <Link
+                      href="/requests/create"
+                      className="flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-medium text-gray-600 hover:bg-blue-50 hover:text-blue-600 active:bg-blue-100 transition-colors"
+                      onClick={() => setMobileOpen(false)}
+                    >
+                      <Search className="size-4" />
+                      Find a Car
+                    </Link>
+                  </motion.div>
+
+                  {/* Browse Requests — dealer-only link */}
+                  {isDealer && (
+                    <motion.div variants={mobileLinkVariants} whileTap={{ scale: 0.97 }}>
+                      <Link
+                        href="/requests"
+                        className="flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-medium text-gray-600 hover:bg-blue-50 hover:text-blue-600 active:bg-blue-100 transition-colors"
+                        onClick={() => setMobileOpen(false)}
+                      >
+                        <ClipboardList className="size-4" />
+                        Browse Requests
+                      </Link>
+                    </motion.div>
+                  )}
+                </>
+              )}
+
+              {/* Help — always visible, last in the list */}
+              <motion.div variants={mobileLinkVariants} whileTap={{ scale: 0.97 }}>
                 <Link
-                  href="/dashboard"
-                  className="flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-medium text-gray-600 hover:bg-blue-50 hover:text-blue-600 transition-colors"
+                  href="/help"
+                  className="flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-medium text-gray-600 hover:bg-blue-50 hover:text-blue-600 active:bg-blue-100 transition-colors"
                   onClick={() => setMobileOpen(false)}
                 >
-                  <LayoutDashboard className="size-4" />
-                  Dashboard
+                  <HelpCircle className="size-4" />
+                  Help
                 </Link>
-                <Link
-                  href="/requests/create"
-                  className="flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-medium text-gray-600 hover:bg-blue-50 hover:text-blue-600 transition-colors"
-                  onClick={() => setMobileOpen(false)}
-                >
-                  <Search className="size-4" />
-                  Find a Car
-                </Link>
-
-                {/* Browse Requests — dealer-only link */}
-                {isDealer && (
-                  <Link
-                    href="/requests"
-                    className="flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-medium text-gray-600 hover:bg-blue-50 hover:text-blue-600 transition-colors"
-                    onClick={() => setMobileOpen(false)}
-                  >
-                    <ClipboardList className="size-4" />
-                    Browse Requests
-                  </Link>
-                )}
-              </>
-            )}
-
-            {/* Help — always visible, last in the list */}
-            <Link
-              href="/help"
-              className="flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-medium text-gray-600 hover:bg-blue-50 hover:text-blue-600 transition-colors"
-              onClick={() => setMobileOpen(false)}
-            >
-              <HelpCircle className="size-4" />
-              Help
-            </Link>
-          </div>
-        </div>
-      )}
+              </motion.div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </nav>
   );
 }
