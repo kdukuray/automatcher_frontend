@@ -8,9 +8,11 @@ import {
   ArrowLeft,
   Camera,
   Car,
+  Check,
   ChevronDown,
   DollarSign,
   Loader2,
+  Mail,
   Package,
   Plus,
   Send,
@@ -132,6 +134,7 @@ interface OfferFormData {
   offeredMonthlyPayment: string;
   offeredDownPayment: string;
   features: string[];
+  emailNotificationsEnabled: boolean;
 }
 
 const defaultFormData: OfferFormData = {
@@ -153,6 +156,10 @@ const defaultFormData: OfferFormData = {
   offeredMonthlyPayment: "",
   offeredDownPayment: "",
   features: [],
+  // Opt-in defaults to true so dealers hear about accept/decline right
+  // away. They can uncheck at the bottom of the form if they prefer not
+  // to get status emails.
+  emailNotificationsEnabled: true,
 };
 
 /* ═══════════════════════════════════════════
@@ -603,6 +610,7 @@ export default function OfferPage() {
         offeredMonthlyPayment: formData.offeredMonthlyPayment,
         offeredDownPayment: formData.offeredDownPayment,
         features: formData.features,
+        emailNotificationsEnabled: formData.emailNotificationsEnabled,
       };
 
       // Step 1: Create the offer and get the new offer UUID
@@ -1460,6 +1468,67 @@ export default function OfferPage() {
                 Select a purchase mode above to see pricing fields.
               </p>
             )}
+          </SectionCard>
+          </StaggerItem>
+
+          {/* --- Email notifications opt-in --- */}
+          {/*
+            Default-on toggle that controls whether the dealer gets a
+            Resend email when the buyer accepts or declines this offer.
+            Can be flipped later from the offer detail edit panel.
+          */}
+          <StaggerItem>
+          <SectionCard
+            icon={<Mail className="size-4" />}
+            title="Email Notifications"
+            description="Stay in the loop when the buyer responds."
+          >
+            <button
+              type="button"
+              onClick={() =>
+                updateField(
+                  "emailNotificationsEnabled",
+                  !formData.emailNotificationsEnabled
+                )
+              }
+              className={cn(
+                "flex w-full items-start gap-3 rounded-lg border px-4 py-3 text-left transition-all cursor-pointer",
+                formData.emailNotificationsEnabled
+                  ? "border-blue-500 bg-blue-50"
+                  : "border-gray-200 bg-white hover:border-blue-200 hover:bg-blue-50/50"
+              )}
+              aria-pressed={formData.emailNotificationsEnabled}
+            >
+              <div
+                className={cn(
+                  "mt-0.5 flex size-5 shrink-0 items-center justify-center rounded border transition-all",
+                  formData.emailNotificationsEnabled
+                    ? "border-blue-500 bg-blue-600 text-white"
+                    : "border-gray-300 bg-white"
+                )}
+              >
+                {formData.emailNotificationsEnabled && (
+                  <Check className="size-3" />
+                )}
+              </div>
+              <div className="flex-1">
+                <div
+                  className={cn(
+                    "text-sm font-medium",
+                    formData.emailNotificationsEnabled
+                      ? "text-blue-800"
+                      : "text-gray-700"
+                  )}
+                >
+                  Email me when this offer&apos;s status changes
+                </div>
+                <div className="mt-0.5 text-xs text-gray-500">
+                  We&apos;ll send a quick email to your account address when
+                  the buyer accepts or declines this offer. You can change
+                  this any time from the offer page.
+                </div>
+              </div>
+            </button>
           </SectionCard>
           </StaggerItem>
 

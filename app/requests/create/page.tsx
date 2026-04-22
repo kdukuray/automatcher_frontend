@@ -124,6 +124,7 @@ interface FormData {
   titleStatus: string;
   features: string[];
   notes: string;
+  emailNotificationsEnabled: boolean;
 }
 
 const defaultFormData: FormData = {
@@ -149,6 +150,9 @@ const defaultFormData: FormData = {
   titleStatus: "any",
   features: [],
   notes: "",
+  // Opt-in defaults to true so buyers don't miss offers. They can uncheck
+  // the "Email me when I get a new offer" checkbox in the Extras step.
+  emailNotificationsEnabled: true,
 };
 
 /* ═══════════════════════════════════════════
@@ -992,6 +996,55 @@ function StepExtras({ data, update }: StepProps) {
           onChange={(e) => update("notes", e.target.value)}
         />
       </div>
+
+      {/* Email notifications opt-in */}
+      {/*
+        Default-on checkbox that controls whether the buyer gets a Resend
+        email every time a new offer arrives. Can be toggled later from
+        the request detail page's edit mode.
+      */}
+      <div>
+        <Label>Email Notifications</Label>
+        <button
+          type="button"
+          onClick={() =>
+            update("emailNotificationsEnabled", !data.emailNotificationsEnabled)
+          }
+          className={cn(
+            "flex w-full items-start gap-3 rounded-lg border px-4 py-3 text-left transition-all cursor-pointer",
+            data.emailNotificationsEnabled
+              ? "border-blue-500 bg-blue-50"
+              : "border-gray-200 bg-white hover:border-blue-200 hover:bg-blue-50/50"
+          )}
+          aria-pressed={data.emailNotificationsEnabled}
+        >
+          <div
+            className={cn(
+              "mt-0.5 flex size-5 shrink-0 items-center justify-center rounded border transition-all",
+              data.emailNotificationsEnabled
+                ? "border-blue-500 bg-blue-600 text-white"
+                : "border-gray-300 bg-white"
+            )}
+          >
+            {data.emailNotificationsEnabled && <Check className="size-3" />}
+          </div>
+          <div className="flex-1">
+            <div
+              className={cn(
+                "text-sm font-medium",
+                data.emailNotificationsEnabled ? "text-blue-800" : "text-gray-700"
+              )}
+            >
+              Email me when I get a new offer
+            </div>
+            <div className="mt-0.5 text-xs text-gray-500">
+              We&apos;ll send a quick email to your account address whenever a
+              dealer sends an offer on this request. You can change this any
+              time.
+            </div>
+          </div>
+        </button>
+      </div>
     </div>
   );
 }
@@ -1194,9 +1247,12 @@ function ReviewPage({
         ...(data.notes
           ? [{ label: "Notes", value: data.notes }]
           : []),
-        ...(!data.features.length && !data.notes
-          ? [{ label: "", value: "No extras specified" }]
-          : []),
+        {
+          label: "Email Notifications",
+          value: data.emailNotificationsEnabled
+            ? "On — email me on new offers"
+            : "Off — I'll check my dashboard",
+        },
       ],
     },
   ];

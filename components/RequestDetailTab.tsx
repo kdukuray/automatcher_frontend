@@ -235,6 +235,7 @@ interface EditFormData {
   titleStatus: string;
   features: string[];
   notes: string;
+  emailNotificationsEnabled: boolean;
 }
 
 /** Convert a VehicleRequestDetail into the editable form shape. */
@@ -262,6 +263,10 @@ function detailToEditForm(detail: VehicleRequestDetail): EditFormData {
     titleStatus: detail.target.titleStatus,
     features: [...detail.features],
     notes: detail.notes,
+    // Default any pre-existing requests (created before the email
+    // notifications feature) to "on" if the backend somehow omits the
+    // field. New/updated responses always include it.
+    emailNotificationsEnabled: detail.emailNotificationsEnabled ?? true,
   };
 }
 
@@ -987,6 +992,58 @@ export default function RequestDetailTab({
                 onChange={(e) => updateField("notes", e.target.value)}
               />
             </div>
+            {/*
+              Email notifications opt-in toggle. Same styling language as
+              the feature checkboxes above for visual consistency.
+            */}
+            <div>
+              <Label>Email Notifications</Label>
+              <button
+                type="button"
+                onClick={() =>
+                  updateField(
+                    "emailNotificationsEnabled",
+                    !editForm.emailNotificationsEnabled
+                  )
+                }
+                className={cn(
+                  "flex w-full items-start gap-3 rounded-lg border px-4 py-3 text-left transition-all cursor-pointer",
+                  editForm.emailNotificationsEnabled
+                    ? "border-blue-500 bg-blue-50"
+                    : "border-gray-200 bg-white hover:border-blue-200 hover:bg-blue-50/50"
+                )}
+                aria-pressed={editForm.emailNotificationsEnabled}
+              >
+                <div
+                  className={cn(
+                    "mt-0.5 flex size-5 shrink-0 items-center justify-center rounded border transition-all",
+                    editForm.emailNotificationsEnabled
+                      ? "border-blue-500 bg-blue-600 text-white"
+                      : "border-gray-300 bg-white"
+                  )}
+                >
+                  {editForm.emailNotificationsEnabled && (
+                    <Check className="size-3" />
+                  )}
+                </div>
+                <div className="flex-1">
+                  <div
+                    className={cn(
+                      "text-sm font-medium",
+                      editForm.emailNotificationsEnabled
+                        ? "text-blue-800"
+                        : "text-gray-700"
+                    )}
+                  >
+                    Email me when I get a new offer
+                  </div>
+                  <div className="mt-0.5 text-xs text-gray-500">
+                    We&apos;ll send a quick email to your account address
+                    whenever a dealer sends an offer on this request.
+                  </div>
+                </div>
+              </button>
+            </div>
           </div>
         ) : (
           <>
@@ -996,6 +1053,14 @@ export default function RequestDetailTab({
               <DetailRow label="Features" value="None specified" />
             )}
             <DetailRow label="Notes" value={detail.notes || "—"} />
+            <DetailRow
+              label="Email Notifications"
+              value={
+                detail.emailNotificationsEnabled
+                  ? "On — we'll email you on new offers"
+                  : "Off — check your dashboard for new offers"
+              }
+            />
           </>
         )}
       </Section>

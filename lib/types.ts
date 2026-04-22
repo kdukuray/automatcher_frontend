@@ -137,6 +137,10 @@ export interface VehicleRequestPayload {
   titleStatus: string;
   features: string[];
   notes: string;
+  /** If true, the buyer receives an email whenever a dealer sends them
+   *  a new offer on this request. Opt-in defaults to true on creation
+   *  and can be toggled in edit mode. */
+  emailNotificationsEnabled: boolean;
 }
 
 /** Response returned after successfully creating a vehicle request. */
@@ -210,6 +214,9 @@ export interface VehicleRequestDetail {
   searchRadius: string;
   notes: string;
   features: string[];
+  /** Whether the buyer has opted in to new-offer email notifications on
+   *  this request. Shown as a checkbox in the edit panel. */
+  emailNotificationsEnabled: boolean;
   target: VehicleTargetDetail;
 }
 
@@ -304,6 +311,9 @@ export interface DealerOfferDetail {
   offeredDownPayment: string;
   features: string[];
   matchScore: number | null;
+  /** Whether the dealer (sender) has opted in to status-change emails
+   *  (accepted / declined). Shown as a checkbox in the edit panel. */
+  emailNotificationsEnabled: boolean;
   requestUuid: string;
   requestMakeName: string;
   requestModelName: string;
@@ -430,6 +440,10 @@ export interface OfferPayload {
   offeredMonthlyPayment: string;
   offeredDownPayment: string;
   features: string[];
+  /** If true, the dealer (sender) receives an email when the buyer
+   *  accepts or declines this offer. Defaults to true on creation
+   *  and can be toggled in edit mode. */
+  emailNotificationsEnabled: boolean;
 }
 
 /** Response returned after successfully creating an offer. */

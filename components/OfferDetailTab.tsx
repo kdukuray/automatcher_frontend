@@ -252,6 +252,10 @@ function detailToEditForm(detail: OfferDetail): EditFormData {
     offeredMonthlyPayment: detail.offeredMonthlyPayment,
     offeredDownPayment: detail.offeredDownPayment,
     features: [...detail.features],
+    // Default pre-existing offers (created before this feature shipped)
+    // to "on" if the backend somehow omits the field. New responses
+    // always include it.
+    emailNotificationsEnabled: detail.emailNotificationsEnabled ?? true,
   };
 }
 
@@ -1431,6 +1435,83 @@ export default function OfferDetailTab({
           </>
         )}
       </Section>
+
+      {/* ── EMAIL NOTIFICATIONS ────────────────
+          Only the sender (dealer) manages this preference. Buyers don't
+          need to see the dealer's notification settings. */}
+      {isSender && (
+        <Section
+          icon={sectionIcons.extras}
+          title="Email Notifications"
+          editing={editing}
+          accentClasses={{
+            border: sectionBorderColor,
+            headerBg: sectionHeaderBg,
+            headerBorder: sectionHeaderBorder,
+            iconColor: sectionIconColor,
+            titleColor: sectionTitleColor,
+            editBadgeBg: editingBadgeBg,
+            editBadgeText: editingBadgeText,
+          }}
+        >
+          {editing && editForm ? (
+            <button
+              type="button"
+              onClick={() =>
+                updateField(
+                  "emailNotificationsEnabled",
+                  !editForm.emailNotificationsEnabled
+                )
+              }
+              className={cn(
+                "flex w-full items-start gap-3 rounded-lg border px-4 py-3 text-left transition-all cursor-pointer",
+                editForm.emailNotificationsEnabled
+                  ? "border-blue-500 bg-blue-50"
+                  : "border-gray-200 bg-white hover:border-blue-200 hover:bg-blue-50/50"
+              )}
+              aria-pressed={editForm.emailNotificationsEnabled}
+            >
+              <div
+                className={cn(
+                  "mt-0.5 flex size-5 shrink-0 items-center justify-center rounded border transition-all",
+                  editForm.emailNotificationsEnabled
+                    ? "border-blue-500 bg-blue-600 text-white"
+                    : "border-gray-300 bg-white"
+                )}
+              >
+                {editForm.emailNotificationsEnabled && (
+                  <Check className="size-3" />
+                )}
+              </div>
+              <div className="flex-1">
+                <div
+                  className={cn(
+                    "text-sm font-medium",
+                    editForm.emailNotificationsEnabled
+                      ? "text-blue-800"
+                      : "text-gray-700"
+                  )}
+                >
+                  Email me when this offer&apos;s status changes
+                </div>
+                <div className="mt-0.5 text-xs text-gray-500">
+                  We&apos;ll send a quick email to your account address when
+                  the buyer accepts or declines this offer.
+                </div>
+              </div>
+            </button>
+          ) : (
+            <DetailRow
+              label="Email Notifications"
+              value={
+                detail.emailNotificationsEnabled
+                  ? "On — we'll email you on accept / decline"
+                  : "Off — check your dashboard for updates"
+              }
+            />
+          )}
+        </Section>
+      )}
 
       {/* Bottom save bar when editing */}
       {editing && (
